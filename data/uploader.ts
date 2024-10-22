@@ -130,22 +130,22 @@ try{
 }
 }
 
-
+export const deleteAll = async()=>{
+  await deleteBookings();
+  await deleteGuests();
+  await deleteCabins();
+}
 
 
 export const resetAll = async ()=>{
-  await login()
   
     // Perform deletions first
-    await deleteBookings();
-    await deleteGuests();
-    await deleteCabins();
+    await deleteAll()
     // Perform creations last
     await createGuests();
     await createCabins();
     await createBookings();
-    
-    await logout()
+   
   }
   
 export  async function resetBookings() {

@@ -22,7 +22,6 @@ const isValidToken = (token: string): boolean => {
   
   // Bearer Token Authentication Middleware
   export const bearerAuth = (req: Request, res: Response, next: NextFunction) => {
-    next();
     const authHeader = req.headers['authorization'];
   
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

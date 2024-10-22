@@ -1,28 +1,33 @@
 import cors from 'cors';
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
-import { resetAll } from './data/uploader.js';
+import { createBookings, createCabins, createGuests, deleteAll, deleteBookings, deleteCabins, deleteGuests, resetAll } from './data/uploader.js';
 import { bearerAuth } from './middleware.js';
 import supabase from './services/supabase.js';
 import { api } from './services/axios.js';
+import { login, logout } from './services/apiAuth.js';
 
 const sec =  Number(process.env.INTERVAL) || 1;
 const interval = sec * 1000; 
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 4000;
 
 app.use(express.json());
 app.use(cors());
 
 const makeRequest = async (req: Request, res: Response,fn: ()=>void,task: string)=>{
   try {
+    await login()
     console.log(`Performing ${task}...`);
     await fn()
     res.status(200).json({ message: `${task} successful!` });
   } catch (error) {
     console.error(`Error during ${task}`, error);
     res.status(500).json({ message: `Error during ${task}`, error: error });
+  }
+  finally{
+    await logout();
   }
 }
 
@@ -51,8 +56,37 @@ app.get('/pin',(req, res)=>{
   res.send();
 })
 
-app.get('/api/reset/all',bearerAuth, async (req, res) => {
+app.get('/api/all/reset',bearerAuth, async (req, res) => {
   await makeRequest(req,res,resetAll,'reset data')
+});
+app.get('/api/all/delete',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,deleteAll,'delete all data')
+});
+
+app.get('/api/cabins/delete/all',bearerAuth, async (req, res) => {
+
+  await makeRequest(req,res,deleteCabins,'delete all cabin data')
+});
+app.get('/api/cabins/reset',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,createCabins,'reset cabin data')
+});
+
+app.get('/api/bookings/delete/all',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,deleteBookings,'delete all booking data')
+});
+app.get('/api/bookings/reset',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,createBookings,'reset booking data')
+});
+
+
+
+app.get('/api/guests/delete/all',bearerAuth, async (req, res) => {
+  console.log('landed');
+  await makeRequest(req,res,deleteGuests,'delete all guests data')
+});
+app.get('/api/guests/reset',bearerAuth, async (req, res) => {
+  console.log('landed');
+  await makeRequest(req,res,createGuests,'reset guests data')
 });
 
 app.listen(port, async () => {

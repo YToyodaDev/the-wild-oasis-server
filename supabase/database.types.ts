@@ -5,7 +5,6 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
   
   export type TableName = keyof Database['public']['Tables'];
   export type Database = {
