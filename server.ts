@@ -1,11 +1,11 @@
 import cors from 'cors';
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
-import { createBookings, createCabins, createGuests, deleteAll, deleteBookings, deleteCabins, deleteGuests, resetAll } from './data/uploader.js';
+import { createBookings, createCabins, deleteAll, deleteAllUsersExceptOne, deleteBookings, deleteCabins, resetAll, resetSetting } from './data/uploader.js';
 import { bearerAuth } from './middleware.js';
-import supabase from './services/supabase.js';
-import { api } from './services/axios.js';
 import { login, logout } from './services/apiAuth.js';
+import { api } from './services/axios.js';
+import supabase from './services/supabase.js';
 
 const sec =  Number(process.env.INTERVAL) || 1;
 const interval = sec * 1000; 
@@ -78,15 +78,12 @@ app.get('/api/bookings/reset',bearerAuth, async (req, res) => {
   await makeRequest(req,res,createBookings,'reset booking data')
 });
 
-
-
-app.get('/api/guests/delete/all',bearerAuth, async (req, res) => {
-  console.log('landed');
-  await makeRequest(req,res,deleteGuests,'delete all guests data')
+app.get('/api/settings/reset',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,resetSetting,'reset settings data')
 });
-app.get('/api/guests/reset',bearerAuth, async (req, res) => {
-  console.log('landed');
-  await makeRequest(req,res,createGuests,'reset guests data')
+
+app.get('/api/users/reset',bearerAuth, async (req, res) => {
+  await makeRequest(req,res,deleteAllUsersExceptOne,'reset users data')
 });
 
 app.listen(port, async () => {

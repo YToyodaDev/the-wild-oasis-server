@@ -5,36 +5,14 @@ import { subtractDates } from '../utils/helpers';
 import { bookings } from './data-bookings';
 import { cabins } from './data-cabins';
 import { guests } from './data-guests';
-import { login, logout } from '../services/apiAuth';
+const authUser = process.env.AUTH_USER = "authuser@example.com"
 
-// const originalSettings = {
-//   minBookingLength: 3,
-//   maxBookingLength: 30,
-//   maxGuestsPerBooking: 10,
-//   breakfastPrice: 15,
-// };
-
-// async function handleDatabaseOperation(operation, tableName, data = null) {
-//   try {
-//     let result;
-
-//     if (operation === 'delete') {
-//       result = await supabase.from(tableName).delete().gt('id', 0);
-//     } else if (operation === 'insert') {
-//       result = await supabase.from(tableName).insert(data);
-//     } else {
-//       throw new Error('Invalid operation');
-//     }
-
-//     if (result.error) {
-//       console.log(`Error in ${operation} operation on ${tableName}: ${result.error.message}`);
-//     } else {
-//       console.log(`${operation.charAt(0).toUpperCase() + operation.slice(1)} operation successful on ${tableName}`);
-//     }
-//   } catch (error) {
-//     console.log(`Caught an error: ${error.message}`);
-//   }
-// }
+const originalSettings = {
+  minBookingLength: 3,
+  maxBookingLength: 30,
+  maxGuestsPerBooking: 10,
+  breakfastPrice: 15,
+};
 
 
 export async function deleteGuests() {
@@ -130,10 +108,50 @@ try{
 }
 }
 
+
+export async function deleteAllUsersExceptOne(keepEmail = authUser) {
+  try {
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    if (listError) throw new Error(`Error fetching users: ${listError.message}`);
+    const usersToDelete = users?.users.filter((user) => user.email !== keepEmail);
+
+    if (!usersToDelete || usersToDelete.length === 0) {
+      console.log('No users to delete, or only the specified user remains.');
+      return;
+    }
+
+    for (const user of usersToDelete) {
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
+      if (deleteError) {
+        console.error(`Failed to delete user with ID ${user.id}: ${deleteError.message}`);
+      } else {
+        console.log(`Successfully deleted user with ID ${user.id}`);
+      }
+    }
+  } catch (error) {
+    console.error(`Error occurred: ${error}`);
+  }
+}
+
+
+export async function resetSetting() {
+  const { data, error } = await supabase
+    .from('settings')
+    .update(originalSettings)
+    .eq('id', 1)
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error('Settings could not be updated');
+  }
+  return data;
+}
 export const deleteAll = async()=>{
   await deleteBookings();
   await deleteGuests();
   await deleteCabins();
+
 }
 
 
@@ -145,7 +163,9 @@ export const resetAll = async ()=>{
     await createGuests();
     await createCabins();
     await createBookings();
-   
+  
+    await resetSetting();
+    await deleteAllUsersExceptOne();
   }
   
 export  async function resetBookings() {
